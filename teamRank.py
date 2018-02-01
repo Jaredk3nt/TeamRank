@@ -24,7 +24,7 @@ def teamRank(teams):
 		for team in teams:
 			for match in team.matches:
 				if (match["team"].score > 0):
-					matchScore = (match["wins"] * match["team"].score) - (match["losses"] / match["team"].score)
+					matchScore = (match["wins"] * match["team"].score) - (match["losses"] / match["team"].score) #+ (0.25 * (match["ties"] * match["team"].score))
 					#print("{} wins {} and loses {} for a score of {}".format(team.name, match["wins"], match["losses"], matchScore))
 					scoreHolder[team.id ] = scoreHolder[team.id] + matchScore
 			# Track low score to remove negatives later on
@@ -45,7 +45,6 @@ def getTeam(teams, id):
 			return teams[i]
 
 def playGames(teams, matches):
-	totalWins = 0
 	for match in matches:
 		matchGenerator = (s for s in match.split())
 		team1id = next(matchGenerator) 
@@ -59,8 +58,6 @@ def playGames(teams, matches):
 
 		team1.playTeam(team2, team1Wins, team2Wins, ties)
 		team2.playTeam(team1, team2Wins, team1Wins, ties)
-		totalWins = totalWins + team1Wins + team2Wins
-	return totalWins
 
 def sortTeams(teams):
 	printTeams(sorted(teams, key=lambda team: -team.score))
