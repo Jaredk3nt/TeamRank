@@ -1,0 +1,12 @@
+sfs 1 ldn 3
+shd 1 seo 3
+gla 2 val 3
+bos 3 ldn 2
+phi 3 nye 2
+hou 4 fla 0
+seo 2 nye 3
+shd 2 phi 3
+dal 3 sfs 0 1
+dal 2 bos 3
+val 3 fla 1
+gla 0 hou 4

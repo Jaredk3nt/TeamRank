@@ -14,9 +14,36 @@ class Team:
 		self.ties = self.ties + ties
 		self.matches.append({"wins": wins, "losses": losses, "ties": ties, "team": team})
 
+def pageRank(teams):
+	for i in range(100):
+		scoreHolder = {team.id: 0.0 for team in teams}
+		for team in teams:
+			tempLosses = {team.id: 0 for team in teams}
+			numLosses = 0
+			for match in team.matches:
+				losses = match["losses"]
+				#print("{} loses {} to {}".format(team.id, losses, match["team"].id))
+				if(losses > 0):
+					numLosses = numLosses + losses
+					tempLosses[match["team"].id] = tempLosses[match["team"].id] + losses
+			# Loop through teams and give score if lost to
+			for (key, value) in tempLosses.items():
+				if(value > 0):
+					scoreHolder[key] = scoreHolder[key] + (value * (team.score/numLosses)) # Give score based on numlosses to team as proportion to total losses
+		# Normalize the scores
+		maxScore = 0
+		for (key, value) in scoreHolder.items():
+			#print("{} : {}".format(key,value))
+			if (value > maxScore):
+				maxScore = value
+		for (key, value) in scoreHolder.items():
+			if (value > 0):
+				team = getTeam(teams, key)
+				team.score = value/maxScore
+
 def teamRank(teams):
 	# Giving 10 iterations to converge
-	for i in range(100):
+	for i in range(50):
 		lowScore = 0.0
 		maxScore = -10000.0
 		#scoreHolder = [0.0 for x in range(len(teams))] # holder with new score
@@ -24,8 +51,8 @@ def teamRank(teams):
 		for team in teams:
 			for match in team.matches:
 				if (match["team"].score > 0):
-					matchScore = (match["wins"] * match["team"].score) - (match["losses"] / match["team"].score) #+ (0.25 * (match["ties"] * match["team"].score))
-					#print("{} wins {} and loses {} for a score of {}".format(team.name, match["wins"], match["losses"], matchScore))
+					# matchScore = (match["wins"] * match["team"].score) - (match["losses"] * match["team"].score)
+					matchScore = (match["wins"] - match["losses"]) * match["team"].score
 					scoreHolder[team.id ] = scoreHolder[team.id] + matchScore
 			# Track low score to remove negatives later on
 			if (scoreHolder[team.id] < lowScore):
@@ -60,24 +87,67 @@ def playGames(teams, matches):
 		team2.playTeam(team1, team2Wins, team1Wins, ties)
 
 def sortTeams(teams):
-	printTeams(sorted(teams, key=lambda team: -team.score))
+	return sorted(teams, key=lambda team: -team.score)
+
+def jsonOut(teams, filename):
+	with open(filename, 'w') as f:
+		f.write('{"ranking": [')
+		for i in range(len(teams)):
+			team = teams[i]
+			outLine = "{ \"team\": \"" + team.name + "\", \"wins\": " + str(team.wins) + ", \"losses\": " + str(team.losses) + ", \"score\": " + str(team.score) + " }" #.format(team.name, team.wins, team.losses, team.score)
+			if(i < len(teams) - 1):
+				outLine = outLine + ","
+			f.write(outLine)
+		f.write("]}")
+	print("Wrote out to : {}".format(filename))
 
 def printTeams(teams):
 	for x in range(len(teams)):
 		team = teams[x]
+		#outLine = "{0}. {1}	{2}-{3} ({4:.2f})\n".format(i, team.name, team.wins, team.losses, team.score)
 		#print("{0}. {1} ({2:.2f})".format(x+1, team.name, team.score))
 		print("    {0}. {1:22} have won {2:2} maps and lost {3:2} maps after playing {4:2} matches. Their score is {5:.2f}".format(x+1, team.name, team.wins, team.losses, len(team.matches), team.score))
+
+def weekByWeek(teams):
+	week1 = open("week1.txt", "r")
+	playGames(teams, week1)
+	pageRank(teams)
+	print("Week 1 Standings:")
+	week1ranking = sortTeams(teams)
+	jsonOut(week1ranking, "week1ranking.json")
+	week1.close()
+
+	week2 = open("week2.txt", "r")
+	playGames(teams, week2)
+	pageRank(teams)
+	print("Week 2 Standings:")
+	week2ranking = sortTeams(teams)
+	jsonOut(week2ranking, "week2ranking.json")
+	week2.close()
+
+	week3 = open("week3.txt", "r")
+	playGames(teams, week3)
+	pageRank(teams)
+	print("Week 3 Standings:")
+	week3ranking = sortTeams(teams)
+	jsonOut(week3ranking, "week3ranking.json")
+	week3.close()
+
+	week4 = open("week4.txt", "r")
+	playGames(teams, week4)
+	pageRank(teams)
+	print("Week 4 Standings:")
+	week4ranking = sortTeams(teams)
+	jsonOut(week4ranking, "week4ranking.json")
+	week4.close()
 
 def main():
 	# Setup teams
 	teams = [ Team("Los Angeles Valiant", "val"), Team("Houston Outlaws", "hou"), Team("San Francisco Shock", "sfs"), Team("Los Angeles Gladiators", "gla"), Team("Seoul Dynasty", "seo"), Team("London Spitfire", "ldn"), Team("New York Excelsior", "nye"), Team("Philadelphia Fusion", "phi"), Team("Boston Uprising", "bos"), Team("Dallas Fuel", "dal"), Team("Florida Mayhem", "fla"), Team("Shanghai Dragons", "shd") ]
 
-	matches = open("matches.txt", "r")
+	weekByWeek(teams)
 
-	playGames(teams, matches)
-	#printTeams(teams)
-	teamRank(teams)
-	sortTeams(teams)
+	
 
 if __name__ == "__main__":
     main()
